@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Конструктор размещения объектов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: #0f172a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            width: 100%;
+        }
+        
+        header {
+            text-align: center;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .content {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .map-container {
+            flex: 1;
+            min-width: 300px;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        #map {
+            width: 100%;
+            height: 600px;
+            background: #0f172a;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #334155;
+        }
+        
+        #map-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #0f172a;
+        }
+        
+        #object {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(0deg);
+            width: 150px;
+            height: 150px;
+            cursor: move;
+            user-select: none;
+            transition: transform 0.15s ease-out;
+            z-index: 10;
+            pointer-events: auto;
+        }
+        
+        .controls {
+            flex: 0 0 300px;
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        
+        .btn:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-rotate {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 1.2rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .rotation-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .coordinates {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+        
+        .coordinate-label {
+            color: #38bdf8;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                flex-direction: column;
+            }
+            
+            .controls {
+                width: 100%;
+            }
+            
+            #map {
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Планировщик строительства</h1>
+            <p>Перемещайте и вращайте объект на карте</p>
+        </header>
+        
+        <div class="content">
+            <div class="map-container">
+                <div id="map">
+                    <img id="map-image" src="https://lh5.googleusercontent.com/Y1cWcriBrZgvLJy2AuKjyg-i62-VfV3vnmlCqonn2cZfUAN9VBIgpLQ-iU9GdSz7OVi8tOWMYynHSVueejEK51EXVG1J_8Kyw6530GhP_Kh82lp1WBf1QnK13XelD0ZvMyCFDrXG2b7SnT6SuKCVXcBUJQH4AJy3sZ6rnsRPI6sioSpkYEim8Q=w1280" alt="Строительная площадка">
+                    <img id="object" src="https://lh4.googleusercontent.com/fkY5qjxxef3tkROoeGDeWNSPPoN7KkmE5iLHNiADMYSONFth1Sk4jiDJTp1LvTDtMGjH8_HLR6Yurn-ETk3_QC_FE4uI5cg_3W5_QL5dbDCPqn4QyVLJDPEDODoKeDIfA6Cml0bskv-fobL__dfAMqlq5yZuSDotdpbH2Q0t0HkS6vxOSmcJmw=w1280" alt="Строительный объект">
+                </div>
+                <div class="coordinates">
+                    <div><span class="coordinate-label">X:</span> <span id="x-coord">50%</span></div>
+                    <div><span class="coordinate-label">Y:</span> <span id="y-coord">50%</span></div>
+                    <div><span class="coordinate-label">Угол:</span> <span id="rotation">0°</span></div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <h3>Вращение объекта</h3>
+                    <div class="rotation-controls">
+                        <button class="btn btn-rotate" id="rotate-left">↺</button>
+                        <button class="btn btn-rotate" id="rotate-right">↻</button>
+                    </div>
+                    <div style="text-align: center; margin: 10px 0; font-size: 1.1rem;">
+                        <span id="rotation-value">0°</span>
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="rotation-step">Шаг вращения: <span id="step-value">15</span>°</label>
+                    <input type="range" id="rotation-step" min="1" max="45" value="15">
+                </div>
+                
+                <div class="control-group">
+                    <label for="object-size">Размер объекта: <span id="size-value">150</span>px</label>
+                    <input type="range" id="object-size" min="50" max="300" value="150">
+                </div>
+                
+                <button class="btn" id="reset-position" style="width: 100%; padding: 12px;">
+                    Сбросить позицию
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const object = document.getElementById('object');
+            const map = document.getElementById('map');
+            const rotateLeftBtn = document.getElementById('rotate-left');
+            const rotateRightBtn = document.getElementById('rotate-right');
+            const rotationStepInput = document.getElementById('rotation-step');
+            const objectSizeInput = document.getElementById('object-size');
+            const rotationValue = document.getElementById('rotation-value');
+            const stepValue = document.getElementById('step-value');
+            const sizeValue = document.getElementById('size-value');
+            const resetBtn = document.getElementById('reset-position');
+            const xCoord = document.getElementById('x-coord');
+            const yCoord = document.getElementById('y-coord');
+            const rotationDisplay = document.getElementById('rotation');
+            
+            let rotation = 0;
+            let isDragging = false;
+            let currentStep = 15;
+            let startX, startY, startLeft, startTop;
+            
+            // Инициализация
+            function init() {
+                centerObject();
+                updateDisplays();
+            }
+            
+            // Центрирование объекта
+            function centerObject() {
+                const mapRect = map.getBoundingClientRect();
+                object.style.left = '50%';
+                object.style.top = '50%';
+                rotation = 0;
+                updateObjectTransform();
+            }
+            
+            // Обновление всех отображений
+            function updateDisplays() {
+                rotationValue.textContent = `${rotation}°`;
+                rotationDisplay.textContent = `${rotation}°`;
+                stepValue.textContent = currentStep;
+                sizeValue.textContent = parseInt(object.style.width);
+                updatePositionDisplay();
+            }
+            
+            // Обновление позиции объекта
+            function updateObjectTransform() {
+                object.style.transform = `translate(-50%, -50%) rotate(${rotation}deg)`;
+                updateDisplays();
+            }
+            
+            // Обновление отображения координат
+            function updatePositionDisplay() {
+                const objRect = object.getBoundingClientRect();
+                const mapRect = map.getBoundingClientRect();
+                
+                const centerX = objRect.left + objRect.width/2 - mapRect.left;
+                const centerY = objRect.top + objRect.height/2 - mapRect.top;
+                
+                const percentX = Math.round((centerX / mapRect.width) * 100);
+                const percentY = Math.round((centerY / mapRect.height) * 100);
+                
+                xCoord.textContent = `${percentX}%`;
+                yCoord.textContent = `${percentY}%`;
+            }
+            
+            // Обработчики событий
+            rotationStepInput.addEventListener('input', function() {
+                currentStep = parseInt(this.value);
+                updateDisplays();
+            });
+            
+            objectSizeInput.addEventListener('input', function() {
+                const size = this.value + 'px';
+                object.style.width = size;
+                object.style.height = size;
+                updateDisplays();
+            });
+            
+            rotateLeftBtn.addEventListener('click', function() {
+                rotation -= currentStep;
+                updateObjectTransform();
+            });
+            
+            rotateRightBtn.addEventListener('click', function() {
+                rotation += currentStep;
+                updateObjectTransform();
+            });
+            
+            resetBtn.addEventListener('click', function() {
+                centerObject();
+            });
+            
+            // Drag and Drop
+            object.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                isDragging = true;
+                
+                const objRect = object.getBoundingClientRect();
+                startX = e.clientX;
+                startY = e.clientY;
+                startLeft = objRect.left - map.getBoundingClientRect().left;
+                startTop = objRect.top - map.getBoundingClientRect().top;
+                
+                object.style.cursor = 'grabbing';
+            });
+            
+            document.addEventListener('mousemove', function(e) {
+                if (!isDragging) return;
+                
+                const mapRect = map.getBoundingClientRect();
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                let newLeft = startLeft + deltaX;
+                let newTop = startTop + deltaY;
+                
+                // Ограничение перемещения в пределах карты
+                newLeft = Math.max(0, Math.min(mapRect.width - object.offsetWidth, newLeft));
+                newTop = Math.max(0, Math.min(mapRect.height - object.offsetHeight, newTop));
+                
+                object.style.left = newLeft + 'px';
+                object.style.top = newTop + 'px';
+                
+                updatePositionDisplay();
+            });
+            
+            document.addEventListener('mouseup', function() {
+                isDragging = false;
+                object.style.cursor = 'move';
+            });
+            
+            // Инициализация при загрузке
+            init();
+            
+            // Обработка клавиатуры
+            document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey && e.key === 'z') {
+                    centerObject();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
